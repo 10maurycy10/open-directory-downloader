@@ -33,7 +33,9 @@ def job(url, starthost, retry_count, db):
 import threading
 
 for items in db.queue_items():
-    threads = [threading.Thread(target=job, args=(url, sh, rc, db)) for (url,sh,rc) in items]
+    # Sharing the db handle caused issues, even with the introduction of a lock
+    # As a fix, open a new db connection for the thread
+    threads = [threading.Thread(target=job, args=(url, sh, rc, data.DB(config))) for (url,sh,rc) in items]
     for thread in threads:
         thread.start()
     for thread in threads:
