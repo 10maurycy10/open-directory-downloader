@@ -4,6 +4,9 @@ import json
 import download
 import urllib
 import auditlog
+from queue import Queue
+import threading
+import time
 
 config = json.loads(open("config.json").read())
 db = data.DB(config)
@@ -11,7 +14,7 @@ db = data.DB(config)
 def job(url, starthost, retry_count, db):
     if not db.indb(url):
         auditlog.log(f"started\t{url}")
-        newlinks = download.dispatch(url, starthost, db, config, retry_count)
+        newlinks = download.dispatch(url, starthost, db, config, retry_count, auditlog.log)
         db.commit()
         if newlinks:
             for link in newlinks:
@@ -32,13 +35,18 @@ def job(url, starthost, retry_count, db):
     else:
         auditlog.log(f"dropping indb\t{url}")
 
-import threading
+queue = Queue(maxsize=1)
+
+def worker(queue, config):
+    db = data.DB(config)
+    while True:
+        (url, shost, retry_count) = queue.get()
+        job(url, shost, retry_count,db)
+
+for _ in range(10):
+    t = threading.Thread(target=worker, args=(queue, config))
+    t.start()
 
 for items in db.queue_items():
-    # Sharing the db handle caused issues, even with the introduction of a lock
-    # As a fix, open a new db connection for the thread
-    threads = [threading.Thread(target=job, args=(url, sh, rc, data.DB(config))) for (url,sh,rc) in items]
-    for thread in threads:
-        thread.start()
-    for thread in threads:
-        thread.join()
+    for item in items:
+        queue.put(item)

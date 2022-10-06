@@ -94,7 +94,7 @@ def mkzip(args):
     print(f"Packing {len(urls)} files")
     with zipfile.ZipFile(args.output, 'w',  compression=zipfile.ZIP_DEFLATED) as outzip:
         for (url,blobid) in tqdm.tqdm(urls):
-            path = urllib.parse.urlparse(url).path
+            path = urllib.parse.urlparse(url).path + "."
             with outzip.open(path, "w") as inzip:
                 content = open(os.path.join("blobs/", blobid), "rb").read()
                 inzip.write(content)

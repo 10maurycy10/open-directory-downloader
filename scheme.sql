@@ -15,7 +15,7 @@ create table queue (
 create table paths (
 	hostname varchar(256),
 	proto varchar(16),
-	filepath varchar(256),
+	filepath varchar(512),
 	full text,
 	blobid varchar(256)
 );
