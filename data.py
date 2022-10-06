@@ -45,11 +45,11 @@ class DB:
             hostnames = self.get_queue_hostnames()
             for hostname in hostnames:
                 urls = self.get_items(hostname, 10)
-                for url in urls:
-                    self.remove_queue(url[0])
                 batch = batch + urls
             self.commit()
             yield batch
+            for url in batch:
+                self.remove_queue(url[0])
             if len(hostnames) == 0:
                 time.sleep(5)
 
@@ -65,6 +65,20 @@ class DB:
         dbc = self.db.cursor();
         dbc.execute("insert into unsupported (full) values (?);", (url,));
     
+    def removefile(self, full):
+        """
+        Undoes the write file method
+        """
+        blobid = str(uuid.uuid4())
+        dbc = self.db.cursor()
+        parsed = urllib.parse.urlparse(full)
+        
+        dbc.execute("select blobid from paths where full=?", (full))
+        blobids = [l for (l) in dbc]
+        dbc.execute("delete from paths paths where full=?", (full))
+        for blobid in blobids:
+            os.remove(os.path.join("blobs/", blobid))
+
     def writefile(self, scheme, hostname, full):
         """
         Returns a open file for the content
@@ -77,6 +91,7 @@ class DB:
             os.mkdir("blobs")
         return open(os.path.join("blobs/", blobid), "wb")
 
+    
     def indb(self, url):
         """
         checks in a url has been downloaded.
@@ -85,6 +100,7 @@ class DB:
         parsed = urllib.parse.urlparse(url)
         dbc.execute("select blobid from paths where proto=? and hostname=? and filepath=?", (parsed.scheme, parsed.hostname, parsed.path))
         for (blobid,) in dbc:
+            print(blobid)
             return True
         return False
 

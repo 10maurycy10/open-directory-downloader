@@ -7,13 +7,13 @@ downloaders = {
     'https': downloaders.http.download
 }
 
-def dispatch(url,starthost,db, config, retry_count):
+def dispatch(url,starthost,db, config, retry_count, log):
     parsed = urllib.parse.urlparse(url)
     scheme = parsed.scheme
     downloader = downloaders.get(scheme)
     if downloader:
         auditlog.log(f"dispaching\t{url}")
-        links = downloader(url, starthost, db, config, retry_count or 0)
+        links = downloader(url, starthost, db, config, retry_count or 0, log)
         db.commit()
         return links
     else:
