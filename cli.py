@@ -72,6 +72,14 @@ def statdl(args):
     lens = [str(db.get_queue_len(host)) for host in hosts]
     print_table(["Hostname", "Queue len"],list(zip(hosts, lens)))
 
+@subcommand()
+def statstore(ars):
+    """
+    Shows listing of downloaded data
+    """
+    print(db.get_dled())
+
+
 @subcommand([
     argument("hostname", help="Hostname to generate zip for"),
     argument("-o", "--output", help="Location of zip file", required=True),

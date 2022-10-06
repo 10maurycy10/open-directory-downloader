@@ -12,6 +12,7 @@ def job(url, starthost, retry_count, db):
     if not db.indb(url):
         auditlog.log(f"started\t{url}")
         newlinks = download.dispatch(url, starthost, db, config, retry_count)
+        db.commit()
         if newlinks:
             for link in newlinks:
                 absolute = urllib.parse.urljoin(url, link)
@@ -27,6 +28,7 @@ def job(url, starthost, retry_count, db):
                     db.unsuported(url)
         else:
             auditlog.log(f"no links for\t{url}")
+        db.commit()
     else:
         auditlog.log(f"dropping indb\t{url}")
 

@@ -15,6 +15,7 @@ def dispatch(url,starthost,db, config, retry_count):
         auditlog.log(f"dispaching\t{url}")
         links = downloader(url, starthost, db, config, retry_count or 0)
         db.commit()
+        print(links)
         return links
     else:
         auditlog.log(f"unsupporing scheme\t{url}")
