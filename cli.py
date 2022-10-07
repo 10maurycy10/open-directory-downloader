@@ -91,10 +91,27 @@ def mkzip(args):
     import zipfile
     import os
     urls = db.get_downloads_for_site(args.hostname)
+
+    # Find files with subfiles, that must be saved as directories
+    dirs = []
+    filenames = [urllib.parse.urlparse(url).path.removesuffix("/") for (url, blob) in urls]
+    filenames.sort()
+    for i in range(len(filenames) - 1):
+        if filenames[i+1].startswith(filenames[i]):
+            dirs.append(filenames[i])
+
+    print(dirs)
+
     print(f"Packing {len(urls)} files")
     with zipfile.ZipFile(args.output, 'w',  compression=zipfile.ZIP_DEFLATED) as outzip:
         for (url,blobid) in tqdm.tqdm(urls):
-            path = urllib.parse.urlparse(url).path + "-"
+            path = urllib.parse.urlparse(url).path
+            path = path.removesuffix("/")
+            if path in dirs:
+                if path.endswith("/"):
+                    path = path + "index"
+                else:
+                    path = path + "/index"
             with outzip.open(path, "w") as inzip:
                 content = open(os.path.join("blobs/", blobid), "rb").read()
                 inzip.write(content)
