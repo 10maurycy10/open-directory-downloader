@@ -130,7 +130,7 @@ class DB:
         dbc = self.db.cursor()
         dbc.execute("select blobid from paths where full=?", (url,));
         blobids = list(dbc)
-        for blobid in blobids:
+        for (blobid,) in blobids:
             dbc.execute("delete from paths where full=?", (url,))
             os.remove(os.path.join("blobs/", blobid))
 
