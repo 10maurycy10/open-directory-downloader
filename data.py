@@ -73,9 +73,9 @@ class DB:
         dbc = self.db.cursor()
         parsed = urllib.parse.urlparse(full)
         
-        dbc.execute("select blobid from paths where full=?", (full))
+        dbc.execute("select blobid from paths where full=?", (full,))
         blobids = [l for (l) in dbc]
-        dbc.execute("delete from paths paths where full=?", (full))
+        dbc.execute("delete from paths paths where full=?", (full,))
         for blobid in blobids:
             os.remove(os.path.join("blobs/", blobid))
 
@@ -129,9 +129,10 @@ class DB:
     def delete(self, url):
         dbc = self.db.cursor()
         dbc.execute("select blobid from paths where full=?", (url,));
-        blobid = list(dbc)[0][0]
-        dbc.execute("delete from paths where full=?", (url,))
-        os.remove(os.path.join("blobs/", blobid))
+        blobids = list(dbc)
+        for blobid in blobids:
+            dbc.execute("delete from paths where full=?", (url,))
+            os.remove(os.path.join("blobs/", blobid))
 
     def commit(self):
         self.db.commit()
