@@ -22,8 +22,11 @@ def job(url, starthost, retry_count, db):
                 parsed = urllib.parse.urlparse(absolute)
                 if parsed.hostname:
                     if parsed.hostname.startswith(starthost) and not db.indb(absolute) and not db.inqueue(absolute):
-                        auditlog.log(f"inserting\t{absolute}")
-                        db.insert_queue(absolute, starthost, 0)
+                        if parsed.path.startswith(urllib.parse.urlparse(url).path):
+                            auditlog.log(f"inserting\t{absolute}")
+                            db.insert_queue(absolute, starthost, 0)
+                        else:
+                            auditlog.log(f"dropping updir\t{absolute}")
                     else:
                         auditlog.log(f"dropping limited\t{absolute}")
                 else:
