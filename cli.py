@@ -115,6 +115,15 @@ def mkzip(args):
             with outzip.open(path, "w") as inzip:
                 content = open(os.path.join("blobs/", blobid), "rb").read()
                 inzip.write(content)
+@subcommand([
+    argument("url", help="URL to delete"),
+])
+def delete(args):
+    """
+    Removes an URL from the db
+    """
+    db.delete(str(args.url))
+    db.commit()
 
 @subcommand([
     argument("hostname", help="Hostname to purge"),
