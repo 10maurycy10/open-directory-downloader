@@ -1,4 +1,6 @@
 #!/bin/python3
+# TODO: Threading can lead to duplicate downloads
+
 import data
 import json
 import download

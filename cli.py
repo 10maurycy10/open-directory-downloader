@@ -64,11 +64,22 @@ def add(args):
     db.commit()
 
 @subcommand()
+def addmul(args):
+    import urllib
+    import tqdm
+    for url in tqdm.tqdm(sys.stdin.readlines()):
+        url = url.rstrip()
+        parsed = urllib.parse.urlparse(url)
+        db.insert_queue(url, parsed.hostname, 0)
+    db.commit()
+
+@subcommand()
 def statdl(args):
     """
     Shows information on *running* downloads.
     """
     hosts =  db.get_queue_hostnames();
+    print(hosts)
     lens = [str(db.get_queue_len(host)) for host in hosts]
     print_table(["Hostname", "Queue len"],list(zip(hosts, lens)))
 
@@ -79,6 +90,16 @@ def statstore(ars):
     """
     print_table(["Hostname", "Filecount"],[(str(h), str(n)) for (h,n) in db.get_dled()])
 
+@subcommand([
+    argument("hostname", help="Hostname to generate zip for")
+])
+def mklist(args):
+    """
+    Creates a listing of files.
+    """
+    urls = db.get_downloads_for_site(args.hostname)
+    for (url,blob) in urls:
+        print(f"{blob}\t{url}")
 
 @subcommand([
     argument("hostname", help="Hostname to generate zip for"),
@@ -100,8 +121,6 @@ def mkzip(args):
         if filenames[i+1].startswith(filenames[i]):
             dirs.append(filenames[i])
 
-    print(dirs)
-
     print(f"Packing {len(urls)} files")
     with zipfile.ZipFile(args.output, 'w',  compression=zipfile.ZIP_DEFLATED) as outzip:
         for (url,blobid) in tqdm.tqdm(urls):
@@ -113,7 +132,7 @@ def mkzip(args):
                 else:
                     path = path + "/index"
             with outzip.open(path, "w") as inzip:
-                content = open(os.path.join("blobs/", blobid), "rb").read()
+                content = open(os.path.join(db.blobpath, blobid), "rb").read()
                 inzip.write(content)
 @subcommand([
     argument("url", help="URL to delete"),

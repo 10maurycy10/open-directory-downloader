@@ -7,6 +7,7 @@ import time
 
 class DB:
     def __init__(self, config):
+            self.blobpath = config["blob_dir"]
             self.db = mariadb.connect(
                 user=config["db_username"],
                 password=config["db_passwd"],
@@ -55,6 +56,7 @@ class DB:
 
     def insert_queue(self, url, starthost, retry_count):
         if retry_count > self.max_retry_count:
+            auditlog.log(f"aborting\t{url}")
             return
         parsed = urllib.parse.urlparse(url)
         hostname = parsed.hostname
@@ -77,7 +79,8 @@ class DB:
         blobids = [l for (l) in dbc]
         dbc.execute("delete from paths paths where full=?", (full,))
         for blobid in blobids:
-            os.remove(os.path.join("blobs/", blobid))
+            os.remove(os.path.join(self.blobpath, blobid))
+        self.commit()
 
     def writefile(self, scheme, hostname, full):
         """
@@ -87,9 +90,10 @@ class DB:
         dbc = self.db.cursor()
         parsed = urllib.parse.urlparse(full)
         dbc.execute("insert into paths (proto, hostname, blobid, full, filepath) values (?,?,?,?,?);", (scheme, hostname, blobid, full, parsed.path))
-        if not os.path.exists("blobs"):
-            os.mkdir("blobs")
-        return open(os.path.join("blobs/", blobid), "wb")
+        if not os.path.exists(self.blobpath):
+            os.mkdir(self.blobpath)
+        self.commit()
+        return open(os.path.join(self.blobpath, blobid), "wb")
 
     
     def indb(self, url):
@@ -132,7 +136,7 @@ class DB:
         blobids = list(dbc)
         for (blobid,) in blobids:
             dbc.execute("delete from paths where full=?", (url,))
-            os.remove(os.path.join("blobs/", blobid))
+            os.remove(os.path.join(self.blobpath, blobid))
 
     def commit(self):
         self.db.commit()
