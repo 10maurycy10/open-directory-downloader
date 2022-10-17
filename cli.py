@@ -122,7 +122,7 @@ def mkzip(args):
             dirs.append(filenames[i])
 
     print(f"Packing {len(urls)} files")
-    with zipfile.ZipFile(args.output, 'w',  compression=zipfile.ZIP_DEFLATED) as outzip:
+    with zipfile.ZipFile(args.output, 'w') as outzip: # compression=zipfile.ZIP_DEFLATED) as outzip:
         for (url,blobid) in tqdm.tqdm(urls):
             path = urllib.parse.urlparse(url).path
             path = path.removesuffix("/")
