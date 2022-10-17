@@ -131,7 +131,7 @@ def mkzip(args):
                     path = path + "index"
                 else:
                     path = path + "/index"
-            with outzip.open(path, "w") as inzip:
+            with outzip.open(path, "w", force_zip64=True) as inzip:
                 content = open(os.path.join(db.blobpath, blobid), "rb").read()
                 inzip.write(content)
 @subcommand([
