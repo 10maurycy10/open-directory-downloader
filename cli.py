@@ -125,6 +125,7 @@ def mkzip(args):
     with zipfile.ZipFile(args.output, 'w') as outzip: # compression=zipfile.ZIP_DEFLATED) as outzip:
         for (url,blobid) in tqdm.tqdm(urls):
             path = urllib.parse.urlparse(url).path
+            path = urllib.parse.unquote(path)
             path = path.removesuffix("/")
             if path in dirs:
                 if path.endswith("/"):
