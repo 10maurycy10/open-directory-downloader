@@ -1,4 +1,5 @@
 import mariadb
+import auditlog
 import urllib
 import uuid
 import os
@@ -79,7 +80,10 @@ class DB:
         blobids = [l for (l) in dbc]
         dbc.execute("delete from paths paths where full=?", (full,))
         for blobid in blobids:
-            os.remove(os.path.join(self.blobpath, blobid))
+            try:
+                os.remove(os.path.join(self.blobpath, blobid))
+            except FileNotFoundError:
+                pass
         self.commit()
 
     def writefile(self, scheme, hostname, full):
@@ -136,7 +140,10 @@ class DB:
         blobids = list(dbc)
         for (blobid,) in blobids:
             dbc.execute("delete from paths where full=?", (url,))
-            os.remove(os.path.join(self.blobpath, blobid))
+            try:
+                os.remove(os.path.join(self.blobpath, blobid))
+            except FileNotFoundError:
+                pass
 
     def commit(self):
         self.db.commit()
