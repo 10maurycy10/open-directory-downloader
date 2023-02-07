@@ -141,6 +141,26 @@ def mkzip(args):
                 with outzip.open(path, "w", force_zip64=True) as inzip:
                     content = open(os.path.join(db.blobpath, blobid), "rb").read()
                     inzip.write(content)
+
+@subcommand([
+    argument("hostname", help="Hostname to generate zip for"),
+])
+def check(args):
+    """
+    Verifyes if all files downloaded from a site can be opened, if any are missing, it will print the url and the correct filename in the blobdir, allowing manual fixing.
+
+    for some reason during a long dowload some, ~10, files went missing, and this was causing falures zipping, this allowed me to find and fix all of them quicly.
+    """
+    import os
+    urls = db.get_downloads_for_site(args.hostname)
+    for (url,blobid) in tqdm.tqdm(urls):
+        try:
+            with open(os.path.join(db.blobpath, blobid), "rb") as file:
+                pass
+        except FileNotFoundError:
+            print(blobid, url)
+
+
 @subcommand([
     argument("url", help="URL to delete"),
 ])
