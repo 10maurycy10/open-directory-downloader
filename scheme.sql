@@ -22,3 +22,6 @@ create table paths (
 
 create index hostname on queue (hostname);
 create index url on queue (url);
+create index path on paths (jostname, proto, filepath);
+create index full on paths (full);
+create index blob on paths (blobid);

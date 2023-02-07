@@ -25,8 +25,8 @@ def extract_urls(body):
 def get_tor_session():
     session = requests.session()
     # Tor uses the 9050 port as the default socks port
-    proxy = "socks5h://127.0.0.1:1080"
-    session.proxies = {'http':  proxy,'https': proxy}
+#    proxy = "socks5h://127.0.0.1:1080"
+#    session.proxies = {'http':  proxy,'https': proxy}
     return session
                                    
 
@@ -41,7 +41,7 @@ def download(url, starthost, db, config, retry_count, log):
         log(f"Making request\t{url}")
         parsed = urllib.parse.urlparse(url)
         tor = get_tor_session()
-        req = tor.get(url, timeout=60, headers=headers, stream=True, verify=False);
+        req = tor.get(url, timeout=5, headers=headers, stream=True, verify=False);
 
         print(req)
         print(req.status_code)
@@ -65,7 +65,7 @@ def download(url, starthost, db, config, retry_count, log):
                     handle.close()
                     db.delete(url)
                     return None
-                if attempt_link_extraction and len(link_extraction_raw) < 64:
+                if attempt_link_extraction and len(link_extraction_raw) < 64000:
                     link_extraction_raw.append(chunk)
                 handle.write(chunk)
                 counter = counter + 1

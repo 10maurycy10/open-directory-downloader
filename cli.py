@@ -116,25 +116,31 @@ def mkzip(args):
     # Find files with subfiles, that must be saved as directories
     dirs = []
     filenames = [urllib.parse.urlparse(url).path.removesuffix("/") for (url, blob) in urls]
+    filenames = list(set(filenames))
     filenames.sort()
     for i in range(len(filenames) - 1):
         if filenames[i+1].startswith(filenames[i]):
             dirs.append(filenames[i])
 
     print(f"Packing {len(urls)} files")
+    
+    writen = set()
+    
     with zipfile.ZipFile(args.output, 'w') as outzip: # compression=zipfile.ZIP_DEFLATED) as outzip:
         for (url,blobid) in tqdm.tqdm(urls):
             path = urllib.parse.urlparse(url).path
             path = urllib.parse.unquote(path)
             path = path.removesuffix("/")
-            if path in dirs:
-                if path.endswith("/"):
-                    path = path + "index"
-                else:
-                    path = path + "/index"
-            with outzip.open(path, "w", force_zip64=True) as inzip:
-                content = open(os.path.join(db.blobpath, blobid), "rb").read()
-                inzip.write(content)
+            if not path in writen:
+                writen.add(path)
+                if path in dirs:
+                    if path.endswith("/"):
+                        path = path + "index"
+                    else:
+                        path = path + "/index"
+                with outzip.open(path, "w", force_zip64=True) as inzip:
+                    content = open(os.path.join(db.blobpath, blobid), "rb").read()
+                    inzip.write(content)
 @subcommand([
     argument("url", help="URL to delete"),
 ])

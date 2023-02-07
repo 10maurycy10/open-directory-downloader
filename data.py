@@ -53,6 +53,7 @@ class DB:
             for url in batch:
                 self.remove_queue(url[0])
             if len(hostnames) == 0:
+                print("Waiting...")
                 time.sleep(5)
 
     def insert_queue(self, url, starthost, retry_count):
