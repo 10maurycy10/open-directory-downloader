@@ -79,7 +79,6 @@ def statdl(args):
     Shows information on *running* downloads.
     """
     hosts =  db.get_queue_hostnames();
-    print(hosts)
     lens = [str(db.get_queue_len(host)) for host in hosts]
     print_table(["Hostname", "Queue len"],list(zip(hosts, lens)))
 
@@ -111,11 +110,18 @@ def mkzip(args):
     """
     import zipfile
     import os
+    print("Getting downloaded paths...")
     urls = db.get_downloads_for_site(args.hostname)
+    
+    print("Parsing urls...")
+    paths = [(urllib.parse.urlparse(url).path, blobid) for (url, blobid) in urls]
+    paths = [(urllib.parse.unquote(url), blobid) for (url, blobid) in urls]
 
+    
+    print("Reconstructing directory structure...")
     # Find files with subfiles, that must be saved as directories
     dirs = []
-    filenames = [urllib.parse.urlparse(url).path.removesuffix("/") for (url, blob) in urls]
+    filenames = [path.removesuffix("/") for (path, blob) in paths]
     filenames = list(set(filenames))
     filenames.sort()
     for i in range(len(filenames) - 1):
@@ -127,17 +133,11 @@ def mkzip(args):
     writen = set()
     
     with zipfile.ZipFile(args.output, 'w') as outzip: # compression=zipfile.ZIP_DEFLATED) as outzip:
-        for (url,blobid) in tqdm.tqdm(urls):
-            path = urllib.parse.urlparse(url).path
-            path = urllib.parse.unquote(path)
-            path = path.removesuffix("/")
+        for (path, blobid) in tqdm.tqdm(paths):
             if not path in writen:
                 writen.add(path)
                 if path in dirs:
-                    if path.endswith("/"):
-                        path = path + "index"
-                    else:
-                        path = path + "/index"
+                    path = path + "/index"
                 with outzip.open(path, "w", force_zip64=True) as inzip:
                     content = open(os.path.join(db.blobpath, blobid), "rb").read()
                     inzip.write(content)
