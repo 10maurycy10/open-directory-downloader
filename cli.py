@@ -114,7 +114,7 @@ def mkzip(args):
     urls = db.get_downloads_for_site(args.hostname)
     
     print("Parsing urls...")
-    paths = [(urllib.parse.urlparse(url).path, blobid) for (url, blobid) in urls]
+    paths = [(urllib.parse.urlparse(url).path, blobid).path for (url, blobid) in urls]
     paths = [(urllib.parse.unquote(url), blobid) for (url, blobid) in urls]
 
     
